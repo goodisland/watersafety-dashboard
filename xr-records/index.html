@@ -845,14 +845,15 @@ Chart.defaults.font.family = "'Noto Sans JP', sans-serif";
         legend:{
           position:'right',
           labels:{
-            padding:18,usePointStyle:true,pointStyleWidth:10,font:{size:13},
+            padding:18,usePointStyle:true,pointStyleWidth:10,font:{size:13},color:'rgba(255,255,255,0.85)',
             generateLabels(c){
               const d=c.data;
               return d.labels.map((l,i)=>({
                 text:`${l}  ${d.datasets[0].data[i]}件`,
                 fillStyle:d.datasets[0].backgroundColor[i],
                 strokeStyle:d.datasets[0].borderColor[i],
-                lineWidth:1, index:i, hidden:false, pointStyle:'circle'
+                lineWidth:1, index:i, hidden:false, pointStyle:'circle',
+                fontColor:'rgba(255,255,255,0.85)'
               }));
             }
           }
