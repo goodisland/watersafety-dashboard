@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>水辺の安全の未来</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: #0a0f1e;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    .slide {
+      display: none;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+    .slide.active { display: flex; }
+
+    /* ── Slide 1: ビジョン全体像 ── */
+    #slide1 {
+      position: relative;
+    }
+    #slide1 .hero {
+      position: relative;
+      flex: 1;
+    }
+    #slide1 .hero img {
+      width: 100%;
+      max-height: 70vh;
+      object-fit: cover;
+      display: block;
+    }
+    #slide1 .hero-title {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.9);
+    }
+    #slide1 .hero-title h1 {
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: 900;
+      line-height: 1.2;
+      letter-spacing: 0.05em;
+    }
+    #slide1 .hero-title p {
+      font-size: clamp(1rem, 2vw, 1.5rem);
+      margin-top: 0.5rem;
+      opacity: 0.9;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      padding: 2.5rem 3rem;
+      background: linear-gradient(180deg, #0d1a3a 0%, #0a0f1e 100%);
+    }
+    .feature-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .feature-card .icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .feature-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: #7dd3fc; }
+    .feature-card p { font-size: 0.85rem; line-height: 1.6; opacity: 0.8; }
+
+    /* ── Slide 2: 技術ピラー詳細 ── */
+    #slide2 {
+      padding: 3rem;
+      background: linear-gradient(135deg, #0d1a3a 0%, #0a1628 100%);
+    }
+    #slide2 h2 {
+      font-size: clamp(1.5rem, 3vw, 2.5rem);
+      font-weight: 900;
+      margin-bottom: 2rem;
+      border-left: 5px solid #38bdf8;
+      padding-left: 1rem;
+    }
+    .pillars {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+    a.pillar {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
+    .pillar {
+      background: rgba(255,255,255,0.05);
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.1);
+      cursor: pointer;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    a.pillar:hover .pillar,
+    .pillar:hover {
+      border-color: #38bdf8;
+      transform: translateY(-4px);
+    }
+    .pillar-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+    .pillar-body { padding: 1.5rem; }
+    .pillar-body .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      margin-bottom: 0.75rem;
+      background: #0369a1;
+      color: #fff;
+    }
+    .pillar-body h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .pillar-body p { font-size: 0.85rem; line-height: 1.7; opacity: 0.8; }
+    .pillar-body ul { margin: 0.5rem 0 0 1.2rem; font-size: 0.83rem; line-height: 1.8; opacity: 0.8; }
+
+    /* ── Navigation ── */
+    .nav {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      display: flex;
+      gap: 0.75rem;
+      z-index: 100;
+    }
+    .nav button {
+      background: rgba(56,189,248,0.85);
+      color: #0a0f1e;
+      border: none;
+      border-radius: 999px;
+      padding: 0.65rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: background 0.2s;
+    }
+    .nav button:hover { background: #7dd3fc; }
+    .nav button:disabled { opacity: 0.3; cursor: default; }
+
+    .slide-counter {
+      position: fixed;
+      bottom: 2.3rem;
+      left: 2rem;
+      font-size: 0.85rem;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Slide 1: ビジョン全体像 -->
+<section id="slide1" class="slide active">
+  <div class="hero">
+    <img src="./Gemini_Generated_Image_3ik3k83ik3k83ik3.png" alt="水辺の安全の未来" />
+    <div class="hero-title">
+      <h1>水辺の安全の未来</h1>
+      <p>AI活用による事故予防・早期警報・迅速救助</p>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature-card">
+      <div class="icon">🚁</div>
+      <h3>浮力体搭載 救助ドローン</h3>
+      <p>溺者発見と同時にフロート投下。ライフガード到着前に浮力を確保し、生存率を向上。</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📡</div>
+      <h3>スマートタワー監視カメラ</h3>
+      <p>複数カメラ＋リアルタイムAI解析。海岸全域を途切れなくカバーし、異常を即時検知。</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🧠</div>
+      <h3>AI予測モデル</h3>
+      <p>混雑密度と離岸流ポテンシャルをリアルタイム可視化。危険区域へのAI自動警告。</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">⌚</div>
+      <h3>ウェアラブル連携ボラード</h3>
+      <p>水泳者装着デバイスへ無線給電。緊急時はライフガードへ即時通報する安全ネットワーク。</p>
+    </div>
+  </div>
+</section>
+
+<!-- Slide 2: 技術ピラー詳細 -->
+<section id="slide2" class="slide">
+  <h2>3つの技術ピラー</h2>
+  <div class="pillars">
+    <a class="pillar" href="http://localhost:8080/ripcurrent-forecast/" target="_blank">
+      <div class="pillar">
+        <img class="pillar-img" src="./ripcurrent-preview.png" alt="離岸流予報" />
+        <div class="pillar-body">
+          <span class="tag">予測</span>
+          <h3>離岸流リスク予報システム ↗</h3>
+          <p>GPV波浪データ（波高・周期・波向）から6時間ごとの離岸流リスクを算出し、日本全国の海水浴場を色別表示。</p>
+          <ul>
+            <li>リスク4段階：低・やや高・高・極めて高</li>
+            <li>最新GPVデータ自動反映</li>
+            <li>海岸名・緯度経度検索対応</li>
+          </ul>
+        </div>
+      </div>
+    </a>
+
+    <a class="pillar" href="http://localhost:8080/drone-monitor/Gemini_Generated_Image_f3qrgyf3qrgyf3qr.png" target="_blank">
+      <div class="pillar">
+        <img class="pillar-img" src="../drone-monitor/Gemini_Generated_Image_f3qrgyf3qrgyf3qr.png" alt="ドローン警報" />
+        <div class="pillar-body">
+          <span class="tag">警報</span>
+          <h3>ドローン一斉警報・監視 ↗</h3>
+          <p>津波・高波発生時に大型LEDボードと音声スピーカーを搭載したドローンが海岸上空を巡回。広域かつ迅速な避難誘導を実現。</p>
+          <ul>
+            <li>「海岸から離れてください」即時アナウンス</li>
+            <li>高台避難経路の視覚的誘導</li>
+            <li>巡視船・陸上部隊との連携運用</li>
+          </ul>
+        </div>
+      </div>
+    </a>
+
+    <a class="pillar" href="http://localhost:8080/XRglass-demo/Gemini_Generated_Image_wgyh9wwgyh9wwgyh.png" target="_blank">
+      <div class="pillar">
+        <img class="pillar-img" src="../XRglass-demo/Gemini_Generated_Image_wgyh9wwgyh9wwgyh.png" alt="XRグラス" />
+        <div class="pillar-body">
+          <span class="tag">現場支援</span>
+          <h3>XRグラス状況認識システム ↗</h3>
+          <p>監視員がXRグラス越しにドローン映像・溺者検出アラート・離岸流危険ゾーンをリアルタイムで確認。1人あたりの監視範囲を大幅拡大。</p>
+          <ul>
+            <li>AIによる溺者・要救助者の自動検出</li>
+            <li>離岸流危険ゾーンのAR表示</li>
+            <li>波高・潮位情報のヘッズアップ表示</li>
+          </ul>
+        </div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- Slide 3: データ基盤・支援システム -->
+<section id="slide3" class="slide">
+  <h2>データ基盤 ＆ 支援システム</h2>
+  <div class="pillars">
+    <a class="pillar" href="http://localhost:8080/statistics/" target="_blank">
+      <div class="pillar">
+        <img class="pillar-img" src="./statistics-preview.png" alt="統計ダッシュボード" />
+        <div class="pillar-body">
+          <span class="tag" style="background:#7c3aed">根拠</span>
+          <h3>水難事故統計ダッシュボード ↗</h3>
+          <p>2020〜2025年の海上保安庁データを可視化。事故件数・死者数の年別推移、月別分布、原因別・都道府県別の内訳を一覧。</p>
+          <ul>
+            <li>離岸流関連事故率 34%（最大要因）</li>
+            <li>7・8月に事故が集中（年間の約40%）</li>
+            <li>投資対効果の根拠として活用</li>
+          </ul>
+        </div>
+      </div>
+    </a>
+
+    <a class="pillar" href="http://localhost:8080/command-center/" target="_blank">
+      <div class="pillar">
+        <img class="pillar-img" src="./command-preview.png" alt="指令センター" />
+        <div class="pillar-body">
+          <span class="tag" style="background:#b45309">統合監視</span>
+          <h3>海岸安全監視センター ↗</h3>
+          <p>複数海岸のカメラ映像をAIが同時解析。離岸流危険ゾーンへの進入を自動検知し、指令センターへリアルタイムアラートを送信。</p>
+          <ul>
+            <li>AIによる要救助者・危険ゾーン進入検出</li>
+            <li>全海岸のリスクレベルを一元管理</li>
+            <li>ドローン・XRグラスとの連携基盤</li>
+          </ul>
+        </div>
+      </div>
+    </a>
+
+    <a class="pillar" href="http://localhost:8080/buoy-network/" target="_blank">
+      <div class="pillar">
+        <img class="pillar-img" src="./buoy-preview.png" alt="ブイネットワーク" />
+        <div class="pillar-body">
+          <span class="tag" style="background:#065f46">データ収集</span>
+          <h3>スマートブイネットワーク ↗</h3>
+          <p>沿岸14基のIoTブイが波高・周期・水温・潮流をリアルタイム観測。収集データは離岸流予報システムへ自動送信し予報精度を向上。</p>
+          <ul>
+            <li>三陸〜沖縄まで14基を広域配置</li>
+            <li>5秒間隔のリアルタイムデータ送信</li>
+            <li>離岸流予報との自動データ連携</li>
+          </ul>
+        </div>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- Navigation -->
+<div class="slide-counter" id="slideCounter">1 / 3</div>
+<div class="nav">
+  <button id="prevBtn" disabled>← 前へ</button>
+  <button id="nextBtn">次へ →</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const counter = document.getElementById('slideCounter');
+  let current = 0;
+
+  function show(idx) {
+    slides[current].classList.remove('active');
+    current = idx;
+    slides[current].classList.add('active');
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === slides.length - 1;
+    counter.textContent = `${current + 1} / ${slides.length}`;
+  }
+
+  prevBtn.addEventListener('click', () => show(current - 1));
+  nextBtn.addEventListener('click', () => show(current + 1));
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' && current < slides.length - 1) show(current + 1);
+    if (e.key === 'ArrowLeft' && current > 0) show(current - 1);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>スマートブイネットワーク可視化</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #080e1a;
+      --surface:  #0f1929;
+      --surface2: #162035;
+      --accent:   #38bdf8;
+      --text:     #e2e8f0;
+      --muted:    #94a3b8;
+      --border:   rgba(255,255,255,0.08);
+      --green:    #22c55e;
+      --yellow:   #eab308;
+      --orange:   #f97316;
+      --red:      #ef4444;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-width: 1200px;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── ヘッダー ── */
+    header {
+      height: 52px;
+      background: linear-gradient(135deg, #060c17 0%, #0a1628 100%);
+      border-bottom: 1px solid rgba(56,189,248,0.2);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .header-dot {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent);
+      animation: blink 2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0.4; }
+    }
+    .header-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+    }
+    .header-sub {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-left: 4px;
+    }
+    .header-badge {
+      margin-left: auto;
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.25);
+      color: var(--accent);
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── メインレイアウト ── */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 70% 30%;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── 地図 ── */
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* MapLibre コントロール調整 */
+    .maplibregl-ctrl-top-right {
+      top: 10px;
+      right: 10px;
+    }
+    .maplibregl-ctrl button {
+      background-color: #162035 !important;
+    }
+    .maplibregl-ctrl button .maplibregl-ctrl-icon {
+      filter: invert(1) !important;
+    }
+
+    /* ── ブイマーカー ── */
+    .buoy-marker {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2.5px solid rgba(255,255,255,0.8);
+      cursor: pointer;
+      position: relative;
+    }
+    .buoy-marker::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid currentColor;
+      opacity: 0.4;
+      animation: buoy-pulse 2s ease-out infinite;
+    }
+    .buoy-marker::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      border: 1.5px solid currentColor;
+      opacity: 0.2;
+      animation: buoy-pulse 2s ease-out infinite 0.5s;
+    }
+    @keyframes buoy-pulse {
+      0%   { transform: scale(1); opacity: 0.4; }
+      100% { transform: scale(1.8); opacity: 0; }
+    }
+    .buoy-low    { background: #22c55e; color: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.6); }
+    .buoy-medium { background: #eab308; color: #eab308; box-shadow: 0 0 8px rgba(234,179,8,0.6); }
+    .buoy-high   { background: #f97316; color: #f97316; box-shadow: 0 0 8px rgba(249,115,22,0.6); }
+    .buoy-vhigh  { background: #ef4444; color: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.6); }
+
+    /* ── Popup ── */
+    .maplibregl-popup-content {
+      background: rgba(15,25,41,0.97) !important;
+      border: 1px solid rgba(56,189,248,0.3) !important;
+      border-radius: 8px !important;
+      padding: 0 !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+      color: var(--text) !important;
+    }
+    .maplibregl-popup-tip {
+      border-top-color: rgba(56,189,248,0.3) !important;
+    }
+    .popup-inner {
+      padding: 14px 16px;
+      min-width: 200px;
+    }
+    .popup-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    .popup-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      padding: 3px 0;
+      color: var(--muted);
+    }
+    .popup-row .val {
+      color: var(--text);
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── 右パネル ── */
+    .right-panel {
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .panel-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.03em;
+      margin-bottom: 4px;
+    }
+    .panel-updated {
+      font-size: 0.65rem;
+      color: var(--muted);
+      font-family: 'Courier New', monospace;
+    }
+
+    /* ブイカード一覧 */
+    .buoy-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px;
+    }
+    .buoy-list::-webkit-scrollbar { width: 4px; }
+    .buoy-list::-webkit-scrollbar-track { background: transparent; }
+    .buoy-list::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.3); border-radius: 2px; }
+
+    .buoy-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .buoy-card:hover {
+      border-color: rgba(56,189,248,0.3);
+      background: #1c2840;
+    }
+    .buoy-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .buoy-card-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .buoy-card-id {
+      font-size: 0.6rem;
+      color: var(--muted);
+      font-family: 'Courier New', monospace;
+    }
+    .wh-bar-wrap {
+      margin-bottom: 6px;
+    }
+    .wh-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.62rem;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    .wh-bar-bg {
+      background: rgba(255,255,255,0.06);
+      border-radius: 3px;
+      height: 5px;
+      overflow: hidden;
+    }
+    .wh-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s ease;
+    }
+    .buoy-meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+    .buoy-meta-item {
+      text-align: center;
+      background: rgba(0,0,0,0.2);
+      border-radius: 4px;
+      padding: 4px 2px;
+    }
+    .buoy-meta-lbl {
+      font-size: 0.55rem;
+      color: var(--muted);
+      letter-spacing: 0.03em;
+    }
+    .buoy-meta-val {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* パネルフッター */
+    .panel-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .panel-footer-link {
+      display: block;
+      text-align: center;
+      font-size: 0.68rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .panel-footer-link a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .panel-footer-link a:hover {
+      text-decoration: underline;
+    }
+
+    /* 凡例 */
+    .legend {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .legend-title {
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-bottom: 3px;
+    }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════
+       レスポンシブ
+    ══════════════════════════════════ */
+    @media (max-width: 900px) {
+      html, body { min-width: 0; height: auto; }
+      body { overflow-y: auto; }
+      header { height: auto; min-height: 52px; padding: 8px 16px; flex-wrap: wrap; gap: 6px; }
+      .header-sub { display: none; }
+      .header-badge { margin-left: auto; }
+      .main-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: 56vw 1fr;
+        height: auto;
+      }
+      #map { min-height: 0; height: 100%; }
+      .right-panel {
+        border-left: none;
+        border-top: 1px solid var(--border);
+        max-height: 380px;
+        height: 380px;
+      }
+      .panel-footer { display: none; }
+    }
+
+    @media (max-width: 540px) {
+      .main-layout { grid-template-rows: 60vw 1fr; }
+      .buoy-meta { grid-template-columns: repeat(3,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-dot"></div>
+  <span class="header-title">スマートブイネットワーク</span>
+  <span class="header-sub">Smart Buoy Network Visualization</span>
+  <span class="header-badge">14 BUOYS ACTIVE</span>
+</header>
+
+<div class="main-layout">
+  <div id="map"></div>
+
+  <div class="right-panel">
+    <div class="panel-header">
+      <div class="panel-title">観測ブイ リアルタイムデータ</div>
+      <div class="panel-updated">最終更新: <span id="lastUpdated">--:--:--</span></div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-title">波高 凡例</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#22c55e"></div>低（〜1.5m）</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#eab308"></div>中（1.5〜2.0m）</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#f97316"></div>高（2.0〜2.5m）</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#ef4444"></div>極高（2.5m+）</div>
+    </div>
+
+    <div class="buoy-list" id="buoyList"></div>
+
+    <div class="panel-footer">
+      <span class="panel-footer-link">
+        リアルタイムデータは離岸流予報システムへ自動送信<br>
+        <a href="http://localhost:8080/ripcurrent-forecast/" target="_blank">
+          http://localhost:8080/ripcurrent-forecast/
+        </a>
+      </span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================
+   ブイデータ
+   ===================================================== */
+const BUOYS_INIT = [
+  { id:'B-001', name:'三陸沖',     lat:39.5,  lon:142.5, wh:3.1, wp:11.8, wt:10.2, cs:1.8 },
+  { id:'B-002', name:'鹿島灘',     lat:36.2,  lon:141.0, wh:2.9, wp:11.2, wt:14.5, cs:1.5 },
+  { id:'B-003', name:'相模灘',     lat:35.0,  lon:139.5, wh:2.8, wp:11.0, wt:15.1, cs:1.4 },
+  { id:'B-004', name:'遠州灘',     lat:34.3,  lon:137.8, wh:2.7, wp:10.8, wt:15.8, cs:1.3 },
+  { id:'B-005', name:'熊野灘',     lat:33.5,  lon:136.2, wh:2.5, wp:10.2, wt:16.2, cs:1.2 },
+  { id:'B-006', name:'土佐湾',     lat:32.6,  lon:133.5, wh:2.4, wp:10.0, wt:17.0, cs:1.1 },
+  { id:'B-007', name:'日向灘',     lat:31.0,  lon:131.8, wh:2.1, wp: 9.2, wt:18.5, cs:1.0 },
+  { id:'B-008', name:'玄界灘',     lat:34.0,  lon:130.0, wh:1.6, wp: 8.0, wt:14.8, cs:0.8 },
+  { id:'B-009', name:'東シナ海北', lat:30.5,  lon:127.5, wh:0.8, wp: 6.2, wt:20.1, cs:0.5 },
+  { id:'B-010', name:'宮古島北',   lat:25.5,  lon:125.8, wh:0.7, wp: 5.8, wt:23.4, cs:0.4 },
+  { id:'B-011', name:'日本海中部', lat:38.0,  lon:134.0, wh:1.4, wp: 7.5, wt:12.3, cs:0.7 },
+  { id:'B-012', name:'日本海北部', lat:40.5,  lon:133.0, wh:1.2, wp: 7.2, wt:10.8, cs:0.6 },
+  { id:'B-013', name:'石川沖',     lat:37.5,  lon:135.5, wh:1.5, wp: 7.8, wt:12.0, cs:0.7 },
+  { id:'B-014', name:'釧路沖',     lat:42.8,  lon:145.5, wh:2.2, wp: 9.0, wt: 8.5, cs:1.0 },
+];
+
+// ディープコピーして可変データとして使う
+let buoys = BUOYS_INIT.map(b => ({ ...b }));
+
+/* =====================================================
+   色分けユーティリティ
+   ===================================================== */
+function whColor(wh) {
+  if (wh >= 2.5) return { cls: 'buoy-vhigh', hex: '#ef4444' };
+  if (wh >= 2.0) return { cls: 'buoy-high',  hex: '#f97316' };
+  if (wh >= 1.5) return { cls: 'buoy-medium',hex: '#eab308' };
+  return { cls: 'buoy-low', hex: '#22c55e' };
+}
+
+function whBarColor(wh) {
+  if (wh >= 2.5) return '#ef4444';
+  if (wh >= 2.0) return '#f97316';
+  if (wh >= 1.5) return '#eab308';
+  return '#22c55e';
+}
+
+/* =====================================================
+   MapLibre 地図初期化
+   ===================================================== */
+const map = new maplibregl.Map({
+  container: 'map',
+  style: {
+    version: 8,
+    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+    sources: {
+      'osm': {
+        type: 'raster',
+        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+        tileSize: 256,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }
+    },
+    layers: [
+      {
+        id: 'osm-tiles',
+        type: 'raster',
+        source: 'osm',
+        paint: {
+          'raster-saturation': -0.7,
+          'raster-brightness-min': 0.0,
+          'raster-brightness-max': 0.4,
+          'raster-opacity': 0.85
+        }
+      }
+    ]
+  },
+  center: [137, 37],
+  zoom: 4.5
+});
+
+map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+/* =====================================================
+   マーカー生成
+   ===================================================== */
+const markers = {};
+const popups = {};
+
+function createMarkerEl(buoy) {
+  const el = document.createElement('div');
+  const col = whColor(buoy.wh);
+  el.className = `buoy-marker ${col.cls}`;
+  el.title = buoy.name;
+  return el;
+}
+
+function buildPopupHTML(buoy) {
+  return `
+    <div class="popup-inner">
+      <div class="popup-title">${buoy.id} — ${buoy.name}</div>
+      <div class="popup-row"><span>波高</span><span class="val">${buoy.wh.toFixed(1)} m</span></div>
+      <div class="popup-row"><span>周期</span><span class="val">${buoy.wp.toFixed(1)} s</span></div>
+      <div class="popup-row"><span>水温</span><span class="val">${buoy.wt.toFixed(1)} °C</span></div>
+      <div class="popup-row"><span>潮流速度</span><span class="val">${buoy.cs.toFixed(1)} m/s</span></div>
+    </div>
+  `;
+}
+
+map.on('load', () => {
+  buoys.forEach(buoy => {
+    const el = createMarkerEl(buoy);
+
+    const popup = new maplibregl.Popup({
+      offset: 16,
+      closeButton: true,
+      closeOnClick: false,
+      className: 'buoy-popup'
+    }).setHTML(buildPopupHTML(buoy));
+
+    const marker = new maplibregl.Marker({ element: el })
+      .setLngLat([buoy.lon, buoy.lat])
+      .setPopup(popup)
+      .addTo(map);
+
+    el.addEventListener('click', () => {
+      marker.togglePopup();
+    });
+
+    markers[buoy.id] = { marker, el };
+    popups[buoy.id] = popup;
+  });
+
+  buildBuoyList();
+});
+
+/* =====================================================
+   右パネル：ブイカード
+   ===================================================== */
+function buildBuoyList() {
+  const list = document.getElementById('buoyList');
+  list.innerHTML = '';
+
+  buoys.forEach(buoy => {
+    const col = whColor(buoy.wh);
+    const maxWh = 4.0;
+    const fillPct = Math.min(100, (buoy.wh / maxWh) * 100).toFixed(1);
+
+    const card = document.createElement('div');
+    card.className = 'buoy-card';
+    card.id = `card-${buoy.id}`;
+    card.innerHTML = `
+      <div class="buoy-card-header">
+        <span class="buoy-card-name">${buoy.name}</span>
+        <span class="buoy-card-id">${buoy.id}</span>
+      </div>
+      <div class="wh-bar-wrap">
+        <div class="wh-bar-label">
+          <span>波高</span>
+          <span style="color:${col.hex}; font-weight:700">${buoy.wh.toFixed(1)} m</span>
+        </div>
+        <div class="wh-bar-bg">
+          <div class="wh-bar-fill" id="bar-${buoy.id}"
+               style="width:${fillPct}%; background:${col.hex}"></div>
+        </div>
+      </div>
+      <div class="buoy-meta">
+        <div class="buoy-meta-item">
+          <div class="buoy-meta-lbl">周期</div>
+          <div class="buoy-meta-val" id="wp-${buoy.id}">${buoy.wp.toFixed(1)}s</div>
+        </div>
+        <div class="buoy-meta-item">
+          <div class="buoy-meta-lbl">水温</div>
+          <div class="buoy-meta-val" id="wt-${buoy.id}">${buoy.wt.toFixed(1)}°C</div>
+        </div>
+        <div class="buoy-meta-item">
+          <div class="buoy-meta-lbl">潮流</div>
+          <div class="buoy-meta-val" id="cs-${buoy.id}">${buoy.cs.toFixed(1)}m/s</div>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener('click', () => {
+      map.flyTo({ center: [buoy.lon, buoy.lat], zoom: 7, duration: 1200 });
+      const m = markers[buoy.id];
+      if (m) m.marker.togglePopup();
+    });
+
+    list.appendChild(card);
+  });
+}
+
+/* =====================================================
+   データ更新（5秒毎に±10%微変動）
+   ===================================================== */
+function jitter(val, pct = 0.10) {
+  const delta = val * pct * (Math.random() * 2 - 1);
+  return Math.max(0.1, val + delta);
+}
+
+function updateBuoyData() {
+  buoys.forEach(buoy => {
+    buoy.wh = parseFloat(jitter(buoy.wh).toFixed(1));
+    buoy.wp = parseFloat(jitter(buoy.wp).toFixed(1));
+    buoy.wt = parseFloat(jitter(buoy.wt, 0.03).toFixed(1));
+    buoy.cs = parseFloat(jitter(buoy.cs).toFixed(1));
+
+    // マーカー色更新
+    const m = markers[buoy.id];
+    if (m) {
+      const col = whColor(buoy.wh);
+      m.el.className = `buoy-marker ${col.cls}`;
+    }
+
+    // popup内容更新（開いている場合）
+    const p = popups[buoy.id];
+    if (p && p.isOpen()) {
+      p.setHTML(buildPopupHTML(buoy));
+    }
+
+    // カード更新
+    const maxWh = 4.0;
+    const fillPct = Math.min(100, (buoy.wh / maxWh) * 100).toFixed(1);
+    const col = whColor(buoy.wh);
+
+    const bar = document.getElementById(`bar-${buoy.id}`);
+    if (bar) {
+      bar.style.width = `${fillPct}%`;
+      bar.style.background = col.hex;
+    }
+    const wpEl = document.getElementById(`wp-${buoy.id}`);
+    if (wpEl) wpEl.textContent = `${buoy.wp.toFixed(1)}s`;
+    const wtEl = document.getElementById(`wt-${buoy.id}`);
+    if (wtEl) wtEl.textContent = `${buoy.wt.toFixed(1)}°C`;
+    const csEl = document.getElementById(`cs-${buoy.id}`);
+    if (csEl) csEl.textContent = `${buoy.cs.toFixed(1)}m/s`;
+
+    // 波高ラベル色更新
+    const card = document.getElementById(`card-${buoy.id}`);
+    if (card) {
+      const whSpan = card.querySelector('.wh-bar-label span:last-child');
+      if (whSpan) {
+        whSpan.style.color = col.hex;
+        whSpan.textContent = `${buoy.wh.toFixed(1)} m`;
+      }
+    }
+  });
+
+  // 最終更新時刻
+  document.getElementById('lastUpdated').textContent =
+    new Date().toTimeString().slice(0,8);
+}
+
+// 5秒ごとに更新
+setInterval(updateBuoyData, 5000);
+
+/* =====================================================
+   毎秒 最終更新時刻を更新
+   ===================================================== */
+setInterval(() => {
+  document.getElementById('lastUpdated').textContent =
+    new Date().toTimeString().slice(0,8);
+}, 1000);
+</script>
+</body>
+</html>

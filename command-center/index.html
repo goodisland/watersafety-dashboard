@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>海岸安全監視センター</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080e1a;
+      --surface:   #0f1929;
+      --surface2:  #162035;
+      --accent:    #38bdf8;
+      --text:      #e2e8f0;
+      --muted:     #94a3b8;
+      --border:    rgba(255,255,255,0.08);
+      --red:       #ef4444;
+      --orange:    #f97316;
+      --green:     #22c55e;
+      --yellow:    #eab308;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-width: 1200px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── ヘッダー ── */
+    header {
+      background: linear-gradient(135deg, #060c17 0%, #0b1830 100%);
+      border-bottom: 1px solid rgba(56,189,248,0.2);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      flex-shrink: 0;
+      position: relative;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 50%, rgba(56,189,248,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-logo .dot {
+      width: 10px; height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; box-shadow: 0 0 8px var(--accent); }
+      50%      { opacity: 0.6; box-shadow: 0 0 2px var(--accent); }
+    }
+    .header-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+    .header-clock {
+      margin-left: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 1.1rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+    .badge-online {
+      background: rgba(34,197,94,0.15);
+      border: 1px solid rgba(34,197,94,0.4);
+      color: #22c55e;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    /* ── メインレイアウト ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 65% 35%;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── 左：カメラグリッド ── */
+    .camera-panel {
+      background: #050a14;
+      border-right: 1px solid var(--border);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+    }
+    .camera-panel-title {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding: 0 4px;
+    }
+    .camera-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 8px;
+      flex: 1;
+    }
+    .camera-item {
+      position: relative;
+      border: 1px solid rgba(56,189,248,0.2);
+      border-radius: 6px;
+      overflow: hidden;
+      background: #000;
+    }
+    .camera-item canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .camera-label {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.85));
+      padding: 12px 8px 6px;
+      font-size: 0.62rem;
+      letter-spacing: 0.04em;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .risk-extreme { color: #ef4444; }
+    .risk-high    { color: #f97316; }
+    .risk-medium  { color: #eab308; }
+    .risk-low     { color: #22c55e; }
+
+    /* ── 右：サイドパネル ── */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--surface);
+    }
+    .side-section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .side-section:last-child { border-bottom: none; }
+    .section-title {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-title::before {
+      content: '';
+      width: 3px; height: 12px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    /* ── アラートログ ── */
+    .alert-log {
+      flex: 1;
+      overflow-y: auto;
+    }
+    .alert-log::-webkit-scrollbar { width: 4px; }
+    .alert-log::-webkit-scrollbar-track { background: transparent; }
+    .alert-log::-webkit-scrollbar-thumb { background: rgba(56,189,248,0.3); border-radius: 2px; }
+
+    .alert-item {
+      padding: 7px 10px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      background: var(--surface2);
+      border-left: 3px solid var(--border);
+      font-size: 0.68rem;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px;
+      align-items: start;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .alert-item.critical { border-left-color: var(--red); }
+    .alert-item.warning  { border-left-color: var(--orange); }
+    .alert-item.info     { border-left-color: var(--accent); }
+    .alert-time {
+      color: var(--muted);
+      font-family: 'Courier New', monospace;
+      font-size: 0.6rem;
+      white-space: nowrap;
+      margin-top: 1px;
+    }
+    .alert-msg { color: var(--text); line-height: 1.4; }
+    .alert-tag {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 0.55rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .tag-critical { background: rgba(239,68,68,0.2); color: #ef4444; }
+    .tag-warning  { background: rgba(249,115,22,0.2); color: #f97316; }
+    .tag-info     { background: rgba(56,189,248,0.2); color: #38bdf8; }
+
+    /* ── リスクレベル ── */
+    .risk-list { display: flex; flex-direction: column; gap: 5px; }
+    .risk-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 8px;
+      background: var(--surface2);
+      border-radius: 4px;
+      font-size: 0.7rem;
+    }
+    .risk-badge {
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.58rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      min-width: 66px;
+      text-align: center;
+    }
+    .badge-extreme { background: rgba(239,68,68,0.2); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-high    { background: rgba(249,115,22,0.2); color: #f97316; border: 1px solid rgba(249,115,22,0.3); }
+    .badge-medium  { background: rgba(234,179,8,0.2);  color: #eab308; border: 1px solid rgba(234,179,8,0.3); }
+    .badge-low     { background: rgba(34,197,94,0.2);  color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+    .risk-loc { flex: 1; color: var(--text); }
+    .risk-pref { color: var(--muted); font-size: 0.62rem; }
+
+    /* ── 本日統計 ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .stat-box {
+      background: var(--surface2);
+      border-radius: 6px;
+      padding: 10px 12px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .stat-box .stat-val {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-box .stat-lbl {
+      font-size: 0.6rem;
+      color: var(--muted);
+      margin-top: 3px;
+      letter-spacing: 0.03em;
+    }
+    .stat-box.alert-stat .stat-val { color: var(--red); }
+    .stat-box.done-stat  .stat-val { color: #22c55e; }
+
+    /* ══════════════════════════════════
+       レスポンシブ
+    ══════════════════════════════════ */
+    @media (max-width: 900px) {
+      body { min-width: 0; height: auto; overflow-y: auto; }
+      header { height: auto; padding: 10px 16px; flex-wrap: wrap; gap: 8px; }
+      .main-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+      }
+      .camera-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        height: auto;
+        overflow: visible;
+      }
+      .camera-grid {
+        grid-template-columns: repeat(2,1fr);
+        grid-template-rows: auto;
+        height: auto;
+        min-height: 0;
+      }
+      .camera-item { aspect-ratio: 16/10; }
+      .side-panel { overflow: visible; height: auto; }
+      .side-section { height: auto !important; }
+      .side-section[style*="flex:2"] { max-height: 260px; overflow-y: auto !important; }
+      .stats-grid { grid-template-columns: repeat(3,1fr); }
+    }
+
+    @media (max-width: 540px) {
+      .camera-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">
+    <div class="dot"></div>
+    <span class="header-title">海岸安全監視センター</span>
+  </div>
+  <span class="badge-online">● System Online</span>
+  <span class="header-clock" id="clockDisplay">--:--:--</span>
+</header>
+
+<div class="main-grid">
+
+  <!-- 左：カメラパネル -->
+  <div class="camera-panel">
+    <div class="camera-panel-title">Live Camera Feed — 6 Channels Active</div>
+    <div class="camera-grid" id="cameraGrid"></div>
+  </div>
+
+  <!-- 右：サイドパネル -->
+  <div class="side-panel">
+
+    <!-- アラートログ -->
+    <div class="side-section" style="flex:2; overflow:hidden; min-height:0;">
+      <div class="section-title">アラートログ</div>
+      <div class="alert-log" id="alertLog"></div>
+    </div>
+
+    <!-- リスクレベル -->
+    <div class="side-section" style="flex:2; overflow:hidden; min-height:0; overflow-y:auto;">
+      <div class="section-title">離岸流リスクレベル</div>
+      <div class="risk-list" id="riskList"></div>
+    </div>
+
+    <!-- 本日統計 -->
+    <div class="side-section">
+      <div class="section-title">本日統計</div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-val" id="statBathers">0</div>
+          <div class="stat-lbl">推定入浴者数</div>
+        </div>
+        <div class="stat-box alert-stat">
+          <div class="stat-val" id="statAlerts">0</div>
+          <div class="stat-lbl">アクティブアラート</div>
+        </div>
+        <div class="stat-box done-stat">
+          <div class="stat-val" id="statDone">0</div>
+          <div class="stat-lbl">対応済み</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* =====================================================
+   カメラ設定
+   ===================================================== */
+const CAMERAS = [
+  { name:'片瀬西浜-CAM1', pref:'神奈川', risk:'extreme', ripZone:{x:0.55, w:0.22} },
+  { name:'七里ヶ浜-CAM2', pref:'神奈川', risk:'extreme', ripZone:{x:0.30, w:0.20} },
+  { name:'大洗-CAM3',     pref:'茨城',   risk:'extreme', ripZone:{x:0.60, w:0.22} },
+  { name:'御宿-CAM4',     pref:'千葉',   risk:'extreme', ripZone:{x:0.40, w:0.18} },
+  { name:'七ヶ浜-CAM5',  pref:'宮城',   risk:'extreme', ripZone:{x:0.48, w:0.20} },
+  { name:'青島-CAM6',    pref:'宮崎',   risk:'high',    ripZone:{x:0.35, w:0.16} },
+];
+
+const RISK_LABELS = {
+  extreme: 'EXTREME',
+  high:    'HIGH',
+  medium:  'MEDIUM',
+  low:     'LOW'
+};
+
+/* =====================================================
+   カメラグリッド構築
+   ===================================================== */
+const grid = document.getElementById('cameraGrid');
+const canvases = [];
+const persons = [];
+
+CAMERAS.forEach((cam, idx) => {
+  const item = document.createElement('div');
+  item.className = 'camera-item';
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 320;
+  canvas.height = 200;
+  item.appendChild(canvas);
+
+  const label = document.createElement('div');
+  label.className = 'camera-label';
+  label.innerHTML = `
+    <span>${cam.name}<br><span class="risk-${cam.risk}">${RISK_LABELS[cam.risk]}</span></span>
+    <span style="color:#94a3b8">${cam.pref}</span>
+  `;
+  item.appendChild(label);
+
+  grid.appendChild(item);
+  canvases.push(canvas);
+
+  // 人物データ初期化（3〜4体）
+  const count = 3 + (idx % 2);
+  const camPersons = [];
+  for (let i = 0; i < count; i++) {
+    camPersons.push({
+      x: Math.random(),
+      y: 0.58 + Math.random() * 0.18,
+      vx: (Math.random() * 0.0008 + 0.0003) * (Math.random() < 0.5 ? 1 : -1),
+      inRip: false,
+      alertTimer: 0,
+      alertBox: null
+    });
+  }
+  persons.push(camPersons);
+});
+
+/* =====================================================
+   描画
+   ===================================================== */
+let frameCount = 0;
+
+function drawCamera(canvas, cam, camPersons) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // 空グラデーション（上30%）
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.30);
+  skyGrad.addColorStop(0, '#b8d4f0');
+  skyGrad.addColorStop(1, '#5b9bd5');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, H * 0.30);
+
+  // 海グラデーション（中40%）
+  const seaGrad = ctx.createLinearGradient(0, H * 0.30, 0, H * 0.70);
+  seaGrad.addColorStop(0, '#1a5fa8');
+  seaGrad.addColorStop(1, '#0d3d6e');
+  ctx.fillStyle = seaGrad;
+  ctx.fillRect(0, H * 0.30, W, H * 0.40);
+
+  // 砂浜（下30%）
+  const sandGrad = ctx.createLinearGradient(0, H * 0.70, 0, H);
+  sandGrad.addColorStop(0, '#d4a574');
+  sandGrad.addColorStop(1, '#b8934a');
+  ctx.fillStyle = sandGrad;
+  ctx.fillRect(0, H * 0.70, W, H * 0.30);
+
+  // 離岸流ゾーン（波紋縞模様）
+  const rz = cam.ripZone;
+  const zx = rz.x * W;
+  const zw = rz.w * W;
+  const seaTop = H * 0.30;
+  const seaBot = H * 0.70;
+
+  // 縦縞
+  const stripeCount = 6;
+  const isAlert = camPersons.some(p => p.inRip);
+  for (let s = 0; s < stripeCount; s++) {
+    const sx = zx + (zw / stripeCount) * s;
+    const sw = zw / stripeCount;
+    const phase = (frameCount * 0.03 + s * 0.5) % 1;
+    const alpha = isAlert
+      ? (0.3 + Math.sin(phase * Math.PI * 2) * 0.15)
+      : (0.15 + Math.sin(phase * Math.PI * 2) * 0.08);
+    ctx.fillStyle = isAlert
+      ? `rgba(239,68,68,${alpha})`
+      : `rgba(249,115,22,${alpha})`;
+    ctx.fillRect(sx, seaTop, sw, seaBot - seaTop);
+  }
+
+  // 波ラインいくつか
+  for (let w = 0; w < 4; w++) {
+    const wy = seaTop + (seaBot - seaTop) * (0.2 + w * 0.18) + Math.sin(frameCount * 0.04 + w) * 2;
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let px = 0; px <= W; px += 4) {
+      const py = wy + Math.sin(px * 0.03 + frameCount * 0.05 + w) * 2;
+      px === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+  }
+
+  // 人物
+  camPersons.forEach(p => {
+    // 移動
+    p.x += p.vx;
+    if (p.x < 0.02) { p.x = 0.02; p.vx *= -1; }
+    if (p.x > 0.98) { p.x = 0.98; p.vx *= -1; }
+
+    // 離岸流チェック
+    const px = p.x * W;
+    if (px > zx && px < zx + zw) {
+      p.inRip = true;
+      p.alertTimer = 60;
+    } else {
+      if (p.alertTimer > 0) p.alertTimer--;
+      else p.inRip = false;
+    }
+
+    const bx = p.x * W;
+    const by = p.y * H;
+    const isInAlert = p.inRip;
+
+    // 影
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath();
+    ctx.ellipse(bx, by + 8, 7, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 体（長円）
+    ctx.fillStyle = isInAlert ? '#ff6b6b' : '#fbbf24';
+    ctx.beginPath();
+    ctx.ellipse(bx, by + 4, 5, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 頭（円）
+    ctx.fillStyle = isInAlert ? '#fca5a5' : '#fde68a';
+    ctx.beginPath();
+    ctx.arc(bx, by - 6, 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 水面反射
+    ctx.save();
+    ctx.globalAlpha = 0.18;
+    ctx.scale(1, -0.4);
+    const reflectY = -((p.y * H - H * 0.30) * 0.4 + H * 0.30 + 8) * (1 / 0.4);
+    ctx.fillStyle = isInAlert ? '#ff6b6b' : '#fbbf24';
+    ctx.beginPath();
+    ctx.ellipse(bx, reflectY, 5, 9, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // 検出ボックス
+    const bw = 22, bh = 30;
+    if (isInAlert) {
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(bx - bw/2, by - bh/2 - 4, bw, bh);
+      // コーナー強調
+      const cl = 5;
+      ctx.strokeStyle = '#ff4444';
+      ctx.lineWidth = 2;
+      [[0,0],[1,0],[0,1],[1,1]].forEach(([cx,cy]) => {
+        const rx = bx - bw/2 + cx * bw;
+        const ry = by - bh/2 - 4 + cy * bh;
+        const dx = cx === 0 ? 1 : -1;
+        const dy = cy === 0 ? 1 : -1;
+        ctx.beginPath();
+        ctx.moveTo(rx, ry + dy * cl);
+        ctx.lineTo(rx, ry);
+        ctx.lineTo(rx + dx * cl, ry);
+        ctx.stroke();
+      });
+      // ALERT テキスト
+      ctx.fillStyle = 'rgba(239,68,68,0.9)';
+      ctx.fillRect(bx - bw/2, by - bh/2 - 16, bw, 12);
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 7px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('ALERT', bx, by - bh/2 - 7);
+    } else {
+      ctx.strokeStyle = '#22c55e';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bx - bw/2, by - bh/2 - 4, bw, bh);
+    }
+    ctx.textAlign = 'left';
+  });
+
+  // スキャンライン
+  ctx.save();
+  ctx.globalAlpha = 0.04;
+  for (let y = 0; y < H; y += 3) {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, y, W, 1);
+  }
+  ctx.restore();
+
+  // ノイズノイズ効果（軽い）
+  ctx.save();
+  ctx.globalAlpha = 0.03;
+  ctx.fillStyle = '#fff';
+  for (let i = 0; i < 20; i++) {
+    ctx.fillRect(
+      Math.random() * W, Math.random() * H,
+      Math.random() * 3 + 1, 1
+    );
+  }
+  ctx.restore();
+
+  // タイムスタンプ（左上）
+  const now = new Date();
+  const ts = now.toTimeString().slice(0,8);
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(4, 4, 70, 14);
+  ctx.fillStyle = '#00ff88';
+  ctx.font = '9px monospace';
+  ctx.fillText(ts, 7, 14);
+
+  // REC バッジ（右上）
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.arc(W - 30, 11, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ef4444';
+  ctx.font = 'bold 9px monospace';
+  ctx.fillText('REC', W - 24, 15);
+
+  // カメラ番号
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(4, 20, 40, 12);
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = '8px monospace';
+  ctx.fillText(`CAM${CAMERAS.indexOf(cam) + 1}`, 7, 29);
+}
+
+/* =====================================================
+   アニメーションループ
+   ===================================================== */
+function animate() {
+  frameCount++;
+  CAMERAS.forEach((cam, i) => {
+    drawCamera(canvases[i], cam, persons[i]);
+  });
+  requestAnimationFrame(animate);
+}
+animate();
+
+/* =====================================================
+   時計
+   ===================================================== */
+function updateClock() {
+  document.getElementById('clockDisplay').textContent =
+    new Date().toTimeString().slice(0,8);
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* =====================================================
+   リスクレベル一覧
+   ===================================================== */
+function buildRiskList() {
+  const list = document.getElementById('riskList');
+  list.innerHTML = '';
+  CAMERAS.forEach(cam => {
+    const row = document.createElement('div');
+    row.className = 'risk-row';
+    row.innerHTML = `
+      <span class="risk-badge badge-${cam.risk}">${RISK_LABELS[cam.risk]}</span>
+      <span class="risk-loc">${cam.name}</span>
+      <span class="risk-pref">${cam.pref}</span>
+    `;
+    list.appendChild(row);
+  });
+}
+buildRiskList();
+
+/* =====================================================
+   アラートログ
+   ===================================================== */
+const ALERT_TEMPLATES = [
+  { msg: '#{cam} 要救助者検出 ゾーンB', level: 'critical' },
+  { msg: '#{cam} 離岸流ゾーン内 複数人確認', level: 'critical' },
+  { msg: '#{cam} 波高上昇 危険水域に到達', level: 'warning' },
+  { msg: '#{cam} 遊泳禁止区域への侵入を検出', level: 'warning' },
+  { msg: '#{cam} 漂流物を検出 注意', level: 'info' },
+  { msg: '#{cam} 遊泳者数が閾値を超過', level: 'warning' },
+  { msg: '#{cam} ライフガード対応中', level: 'info' },
+  { msg: '#{cam} 視界不良 カメラ自動調整', level: 'info' },
+  { msg: '#{cam} 異常な引き波を検出', level: 'critical' },
+  { msg: '#{cam} 体調不良者らしき人物を検出', level: 'warning' },
+];
+const ZONES = ['ゾーンA','ゾーンB','ゾーンC'];
+
+let alertCount = 0;
+let doneCount = 0;
+
+function addAlert() {
+  const tpl = ALERT_TEMPLATES[Math.floor(Math.random() * ALERT_TEMPLATES.length)];
+  const cam = CAMERAS[Math.floor(Math.random() * CAMERAS.length)];
+  const zone = ZONES[Math.floor(Math.random() * ZONES.length)];
+  const msg = tpl.msg.replace('#{cam}', cam.name).replace('ゾーンB', zone);
+  const now = new Date().toTimeString().slice(0,8);
+
+  const log = document.getElementById('alertLog');
+  const item = document.createElement('div');
+  item.className = `alert-item ${tpl.level}`;
+  item.innerHTML = `
+    <span class="alert-time">${now}</span>
+    <span class="alert-msg"><span class="alert-tag tag-${tpl.level}">${tpl.level.toUpperCase()}</span>${msg}</span>
+  `;
+  log.insertBefore(item, log.firstChild);
+
+  // 最新10件に制限
+  while (log.children.length > 10) {
+    log.removeChild(log.lastChild);
+  }
+
+  if (tpl.level === 'critical' || tpl.level === 'warning') {
+    alertCount++;
+    if (Math.random() < 0.3) {
+      doneCount++;
+      alertCount = Math.max(0, alertCount - 1);
+    }
+    document.getElementById('statAlerts').textContent = alertCount;
+    document.getElementById('statDone').textContent = doneCount;
+  }
+}
+
+// 5秒ごとにアラート追加
+setInterval(addAlert, 5000);
+// 初回即実行
+addAlert();
+addAlert();
+addAlert();
+
+/* =====================================================
+   本日統計 カウンターアニメーション
+   ===================================================== */
+let batherTarget = 1200 + Math.floor(Math.random() * 800);
+let batherCurrent = 0;
+
+function animateBather() {
+  if (batherCurrent < batherTarget) {
+    batherCurrent += Math.ceil((batherTarget - batherCurrent) / 20);
+    document.getElementById('statBathers').textContent = batherCurrent.toLocaleString();
+    requestAnimationFrame(animateBather);
+  } else {
+    document.getElementById('statBathers').textContent = batherTarget.toLocaleString();
+    // 定期的にゆっくり変動
+    setInterval(() => {
+      batherTarget += Math.floor(Math.random() * 20) - 10;
+      if (batherTarget < 500) batherTarget = 500;
+      document.getElementById('statBathers').textContent = batherTarget.toLocaleString();
+    }, 8000);
+  }
+}
+animateBather();
+
+// アラート・対応済みも初期化
+document.getElementById('statAlerts').textContent = '0';
+document.getElementById('statDone').textContent = '0';
+</script>
+</body>
+</html>
