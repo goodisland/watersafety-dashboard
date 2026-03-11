@@ -1,0 +1,22 @@
+[
+  { "id": "katase-nishihama",  "name": "片瀬西浜",         "pref": "神奈川県", "lat": 35.3053, "lon": 139.4803, "shoreNormalDeg": 160 },
+  { "id": "yuigahama",        "name": "由比ヶ浜",         "pref": "神奈川県", "lat": 35.3048, "lon": 139.5494, "shoreNormalDeg": 150 },
+  { "id": "shichirigahama",   "name": "七里ヶ浜",         "pref": "神奈川県", "lat": 35.3031, "lon": 139.5003, "shoreNormalDeg": 160 },
+  { "id": "ooarai",           "name": "大洗サンビーチ",   "pref": "茨城県",   "lat": 36.3126, "lon": 140.5843, "shoreNormalDeg": 110 },
+  { "id": "onjuku",           "name": "御宿中央海水浴場", "pref": "千葉県",   "lat": 35.1876, "lon": 140.3535, "shoreNormalDeg": 130 },
+  { "id": "shirahama-izu",    "name": "白浜大浜",         "pref": "静岡県",   "lat": 34.6808, "lon": 138.9526, "shoreNormalDeg": 170 },
+  { "id": "fujisuka",         "name": "富士海岸",         "pref": "静岡県",   "lat": 34.6945, "lon": 138.9191, "shoreNormalDeg": 145 },
+  { "id": "shirarahama",      "name": "白良浜",           "pref": "和歌山県", "lat": 33.6804, "lon": 135.3454, "shoreNormalDeg": 240 },
+  { "id": "suma",             "name": "須磨海岸",         "pref": "兵庫県",   "lat": 34.6452, "lon": 135.1127, "shoreNormalDeg": 170 },
+  { "id": "katsurahama",      "name": "桂浜",             "pref": "高知県",   "lat": 33.4967, "lon": 133.5764, "shoreNormalDeg": 150 },
+  { "id": "futamigaura",      "name": "二見ヶ浦",         "pref": "福岡県",   "lat": 33.6072, "lon": 130.2828, "shoreNormalDeg": 300 },
+  { "id": "aragusuku",        "name": "新城海岸",         "pref": "沖縄県",   "lat": 24.7624, "lon": 125.4165, "shoreNormalDeg": 70  },
+  { "id": "shakotan",         "name": "積丹美国浜",       "pref": "北海道",   "lat": 43.29,   "lon": 140.53,   "shoreNormalDeg": 275 },
+  { "id": "shichigahama-myg", "name": "七ヶ浜海岸",       "pref": "宮城県",   "lat": 38.31,   "lon": 141.07,   "shoreNormalDeg": 100 },
+  { "id": "katayamazu",       "name": "片山津海岸",       "pref": "石川県",   "lat": 36.29,   "lon": 136.31,   "shoreNormalDeg": 280 },
+  { "id": "tottori-sakyu",    "name": "鳥取砂丘海岸",     "pref": "鳥取県",   "lat": 35.55,   "lon": 134.22,   "shoreNormalDeg": 355 },
+  { "id": "aoshima",          "name": "青島海岸",         "pref": "宮崎県",   "lat": 31.85,   "lon": 131.47,   "shoreNormalDeg": 110 },
+  { "id": "fukiage",          "name": "吹上浜",           "pref": "鹿児島県", "lat": 31.62,   "lon": 130.40,   "shoreNormalDeg": 250 },
+  { "id": "yonaha",           "name": "与那覇前浜",       "pref": "沖縄県",   "lat": 24.68,   "lon": 125.23,   "shoreNormalDeg": 195 },
+  { "id": "hateruma",         "name": "波照間ニシ浜",     "pref": "沖縄県",   "lat": 24.06,   "lon": 123.80,   "shoreNormalDeg": 185 }
+]

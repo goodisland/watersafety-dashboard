@@ -1,0 +1,78 @@
+﻿<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RipCurrent Japan Forecast</title>
+  <meta name="description" content="日本版 離岸流予報アプリ" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Rip Current Forecast</p>
+        <h1>日本版 離岸流予報</h1>
+      </div>
+      <div class="badge" id="updatedBadge">更新: 読み込み中</div>
+    </header>
+
+    <main class="layout">
+      <section class="panel control-panel">
+        <div class="search-block">
+          <label for="locationInput">海岸名 / 海水浴場 / 緯度経度</label>
+          <div class="search-row">
+            <input id="locationInput" type="text" placeholder="例: 片瀬西浜, 35.308,139.482" />
+            <button id="searchButton">検索</button>
+          </div>
+          <p class="helper">候補: ビーチ名, 海岸名, または `緯度,経度`</p>
+        </div>
+
+        <div class="source-row">
+          <label for="scenarioSelect">シナリオ選択</label>
+          <select id="scenarioSelect">
+            <option value="storm">荒天（極めて高リスク）</option>
+            <option value="normal">通常</option>
+            <option value="calm">穏やか（低リスク）</option>
+          </select>
+        </div>
+
+        <div class="source-row">
+          <label for="mapProvider">地図プロバイダ</label>
+          <select id="mapProvider">
+            <option value="maplibre">MapLibre (標準)</option>
+            <option value="mapbox">Mapbox Style URL</option>
+            <option value="google">Google Maps URL</option>
+          </select>
+        </div>
+
+        <div class="risk-legend">
+          <h2>離岸流リスクレベル</h2>
+          <ul>
+            <li><span class="dot low"></span>低い</li>
+            <li><span class="dot moderate"></span>やや高い</li>
+            <li><span class="dot high"></span>高い</li>
+            <li><span class="dot extreme"></span>極めて高い</li>
+          </ul>
+        </div>
+
+        <div class="selected" id="selectedSpotCard">
+          <h2>地点を選択してください</h2>
+          <p>地図上のマーカーをクリックすると、6時間ごとの予報が表示されます。</p>
+        </div>
+      </section>
+
+      <section class="panel map-panel">
+        <div id="map"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
